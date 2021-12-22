@@ -16,6 +16,8 @@
     "web3": "^1.6.0"
   },
   "devDependencies": {
+    "@rarible/sdk": "^0.7.45",
+    "@rarible/web3-ethereum": "^0.12.16",
     "@types/node": "^16.10.1",
     "@types/react": "^17.0.24",
     "autoprefixer": "^10.3.6",

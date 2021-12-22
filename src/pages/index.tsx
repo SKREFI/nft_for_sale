@@ -3,9 +3,8 @@ import { useEthContext } from "../context/EthereumContext";
 import { useState, useEffect } from "react";
 import Loader from "react-loader-spinner";
 import axios from "axios";
-import { currentChainInfo } from "../constants/addresses";
 import NFTTile from "../components/NFTTile";
-import { SelectChainDropdown } from "../components/SelectChainDropdown";
+import { currentChainInfo } from "../constants/addresses";
 
 type NftItem = {
   id: string;
@@ -20,30 +19,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<Boolean>(true);
 
   useEffect(() => {
-    // If there's no account connected -> do nothing
-    if (!currentAcc) {
-      return;
-    }
-
-    fetchNftByOwner();
+    if (!currentAcc) { return }
+    fetch50();
   }, [currentAcc]);
 
-  const fetchNftByOwner = async () => {
-    // Get nft by owner https://api-reference.rarible.com/#operation/getNftItemsByOwner
+  const fetch50 = async () => {
     const { data }: any = await axios.get(
-      currentChainInfo.apiDomain + "/protocol/v0.1/ethereum/nft/items/byOwner",
-      {
-        params: {
-          owner: currentAcc,
-        },
-      }
+      `${currentChainInfo.apiDomain}/v0.1/nft/items/all`
     );
 
     setIsLoading(false);
 
-    //Filtering fetched items by properties we need
-    // There's no sense in having them all
-    let fetchedItems: Array<NftItem> = data.items.map((item) => {
+    let nfts: Array<NftItem> = data.items.map((item) => {
       return {
         id: item.id,
         name: item.meta.name,
@@ -52,36 +39,30 @@ export default function Home() {
       };
     });
 
-    setNfts(fetchedItems);
-    console.log(fetchedItems);
+    setNfts(nfts);
   };
 
   const handleConnectWallet = async () => {
     await provider.request({ method: `eth_requestAccounts` });
   };
 
-  const handleSelectNft = () => {};
-
   return (
-    <div className="flex items-center p-4 min-h-screen w-full justify-center bg-yellow-400 relative">
-      <SelectChainDropdown />
+    <div className="flex items-center min-h-screen w-full justify-center relative">
       <main>
-        {/* If the user is not connected to site */}
         {!currentAcc && (
-          <MetaMaskButton onClick={handleConnectWallet} accounts={accounts} />
+          <MetaMaskButton onClick={ handleConnectWallet } accounts={accounts} />
         )}
-        {/* If he is connected fetch his nfts, show loader while doing it */}
+
         {currentAcc && isLoading && (
           <div className="w-full h-full flex items-center justify-start flex-col">
             <Loader type="TailSpin" color="#000" height={50} width={50} />
-            <p className="mt-10">Loading your NFTs...</p>
+            <p className="mt-10">Loading...</p>
           </div>
         )}
 
-        {/* If he is connected and NFTS are fetched show them */}
         {currentAcc && !isLoading && (
           <div className="w-full h-full flex items-center justify-start flex-wrap">
-            {nfts && nfts.length > 0
+            {nfts && nfts.length > 0 
               ? nfts.map((nft) => {
                   return (
                     <NFTTile
@@ -92,7 +73,7 @@ export default function Home() {
                     />
                   );
                 })
-              : "It seems that you don't have any NFTs yet :)"}
+              : "Something went wrong. Fetched 0 NFTs."}
           </div>
         )}
       </main>

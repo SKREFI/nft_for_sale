@@ -19,6 +19,5 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/components/SelectChainDropdown/index.js"
   ]
 }

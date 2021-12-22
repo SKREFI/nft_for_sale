@@ -4,8 +4,20 @@ import Loader from "react-loader-spinner";
 import axios from "axios";
 import { currentChainInfo } from "../../constants/addresses";
 import { useRouter } from "next/router";
-import { createSellOrder } from "../../utils/sellOrderRequests";
-import { SelectChainDropdown } from "../../components/SelectChainDropdown";
+import { useSdk } from "../../utils/use-sdk";
+
+// import Web3 from "web3";
+// import { Web3Ethereum } from "@rarible/web3-ethereum"
+// import { EthereumWallet } from "@rarible/sdk-wallet"
+
+// import { createRaribleSdk } from "@rarible/sdk"
+// import { IRaribleSdk } from "@rarible/sdk/build/domain";
+
+// const ethereum = new Web3Ethereum({ web3, from })
+// const ethereumWallet = new EthereumWallet(ethereum, from) 
+
+// second parameter - is environment: "prod" | "staging" | "e2e" | "dev"
+// const sdk = createRaribleSdk(ethereumWallet, "dev")
 
 export default function Details() {
   const { accounts, provider, currentAcc } = useEthContext();
@@ -15,89 +27,69 @@ export default function Details() {
   const [isLoading, setIsLoading] = useState<Boolean>(true);
 
   let router = useRouter();
-
+ 
   let { tokenId } = router.query;
 
   useEffect(() => {
     if (tokenId) {
       fetchTokenData();
-      fetchTokenSellOrder();
     }
   }, [tokenId]);
 
+  let sdk = useSdk("prod")
+
   const fetchTokenData = async () => {
-    let { data } = await axios.get(
-      currentChainInfo.apiDomain +
-        `/protocol/v0.1/ethereum/nft/items/${tokenId}`,
-      { params: { itemId: tokenId } }
-    );
-    setNftDetails(data);
+    // let { data } = await axios.get(
+    //   currentChainInfo.apiDomain +
+    //     `/protocol/v0.1/ethereum/nft/items/${tokenId}`,
+    //   { params: { itemId: tokenId } }
+    // );
+
+    // 0xc9154424b823b10579895ccbe442d41b9abd96ed
+    // :
+    // 63121686759765895316946253801704697679735370667402128884982010395786171383809
+
+    let tokenData = (await sdk.sdk.apis.item.getItemById({ itemId: `ETHEREUM:${tokenId as string}` }))
+
+    // console.log("contractData: " + contractData)
+    console.log("tokenData: " + tokenId)
+
+    setNftDetails(tokenData);
     setIsLoading(false);
-    console.log(data);
-  };
-
-  const fetchTokenSellOrder = async () => {
-    const token = (tokenId as string).split(":").pop();
-    const contract = (tokenId as string).split(":")[0];
-
-    let { data } = await axios.get(
-      currentChainInfo.apiDomain +
-        "/protocol/v0.1/ethereum/order/orders/sell/byItem",
-      { params: { contract, tokenId: token } }
-    );
-
-    //@ts-ignore
-    let sortedData = data.orders.sort(
-      //@ts-ignore
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    //@ts-ignore
-    setSellOrder(sortedData[0]);
-    console.log(data);
   };
 
   const handleInputChange = (event) => {
     setnftPrice(event.target.value);
   };
 
-  const handleCreateSellOrder = async (e) => {
-    e.preventDefault();
+  const createSellOrder = () => {
+    // TODO: deal with sell order
 
-    // Remember to parseFloat instead of int
-    // because int round it down or up
+  }
 
-    const sellOrderRes = await createSellOrder(
-      `MAKE_ERC721_TAKE_ETH`,
-      provider,
-      {
-        accountAddress: currentAcc,
-        makeERC721Address: currentChainInfo.address,
-        makeERC721TokenId: (tokenId as string).split(":").pop(),
-        ethAmt: (parseFloat(nftPrice) * 10 ** 18).toString(),
-      }
-    );
-
-    console.log(sellOrderRes);
-
-    fetchTokenSellOrder();
-  };
+  const stringify = (value: any) => {
+    return JSON.stringify(value)
+  }
 
   return (
-    <div className="flex items-center p-4 min-h-screen w-full justify-center bg-yellow-400 relative">
-      <SelectChainDropdown />
+    <div className="flex items-center p-4 min-h-screen w-full justify-center relative">
       {isLoading && (
         <div className="w-full h-full flex items-center justify-start flex-col">
           <Loader type="TailSpin" color="#000" height={50} width={50} />
-          <p className="mt-10">Loading your NFTs...</p>
+          <p className="mt-10">Loading...</p>
         </div>
       )}
 
       {!isLoading && (
         <main className="w-full h-full flex flex-row items-center">
           <div className="flex justify-center items-center flex-1 h-full bg-gray-100 max-h-90">
+            
+            { stringify(nftDetails.meta) }
+            
+            <p>{nftDetails.meta}</p>
             <img
-              src={nftDetails.meta.image?.url.ORIGINAL}
-              className=" flex-shrink-0 min-w-full min-h-full object-cover"
+              // src={nftDetails.meta.image.url.ORIGINAL}
+              className="flex-shrink-0 min-w-full min-h-full object-cover"
             />
           </div>
           <div className="flex flex-col flex-1 items-center justify-between">
@@ -110,7 +102,7 @@ export default function Details() {
                 <b>DESCRIPTION:</b> {nftDetails.meta.description}
               </p>
             </div>
-            <form className=" flex flex-col" onSubmit={handleCreateSellOrder}>
+            <form className=" flex flex-col" onSubmit={createSellOrder}>
               {sellOrder ? (
                 <p className="text-green-500 font-bold mb-6 text-center">{`Listed currently for ${
                   parseInt(sellOrder.take.value) / 10 ** 18

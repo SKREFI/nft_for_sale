@@ -11,7 +11,6 @@ const NFTTile: React.FC<NFTTileProps> = ({ id, imgSrc, name }) => {
   const [isLoaded, setIsLoaded] = useState<Boolean>(false);
 
   const onLoad = () => {
-    console.log("loaded");
     setIsLoaded(true);
   };
 

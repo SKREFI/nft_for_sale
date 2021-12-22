@@ -11,7 +11,6 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [accounts, setAccounts] = useState<string[]>([]);
   const [currentAcc, setCurrentAcc] = useState<string>("");
 
-  // Initial settings
   useEffect(() => {
     if ((window as any).ethereum) {
       handleEthereum();
@@ -19,9 +18,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       window.addEventListener("ethereum#initialized", handleEthereum, {
         once: true,
       });
-
-      // If the event is not dispatched by the end of the timeout
-      // the user probably doesn't have MetaMask installed
+      
       setTimeout(handleEthereum, 3000);
     }
   }, []);
@@ -69,7 +66,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       }}
     >
       <Head>
-        <title>NFT Marketplace Tutorial</title>
+        <title>NFTs Marketplace</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <Component {...pageProps} />
